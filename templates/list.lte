@@ -1,0 +1,70 @@
+{% autoescape false %}
+
+<div id="droplets" class="container">
+<div class="pag_title">Groups Pages Backend Access (admin_groups)</div>
+<form class="ui form" action="{{ action }}" method="post">
+    <input type="hidden" name="leptoken" value="{{ leptoken }}" />
+    <table class="pag_table">
+    <thead>
+        <tr>
+            <td class="pag_row">&nbsp;</td>
+        {% for g in allGroups %}
+            <td class="pag_row group_title{% if (g.backend_access == 0) %} no_backend_access{% endif %}">{{ g.name }}</td>
+        {% endfor %}
+        </tr>
+        
+        <tr>
+            <td class="pag_row page_row_deep_{{ deep }}"></td>
+    {% for g in allGroups %}
+            <td class="pag_row">
+                {% if (g.group_id > 1) %}<input name="main" type="checkbox" onclick="toggleColumn({{ g.group_id }}, this);" value="0" >{% endif %}
+            </td>
+    {% endfor %}
+        </tr>
+    
+    </thead>
+    <tbody>
+{% macro display_pageblock( page, allGroups, deep ) %}
+    <tr>
+        <td class="pag_row page_row_deep_{{ deep }}">
+        {{ page.page_title }}{% if (page.subpages|length > 0) %} <i class="caret down icon"></i>{% endif %}
+        </td>
+    {% for g in allGroups %}
+        <td class="pag_row pag_col_{% if(loop.index % 2) %}1{% else %}2{% endif %}">
+            <input name="groups[{{ page.page_id }}][]" class="c{{ g.group_id }}" id="{{ page.page_id }}_{{ g.group_id }}" type="checkbox" value="{{ g.group_id }}" {% if (g.group_id in page.admin_groups) %}checked='checked'{% endif %} {% if ((g.group_id == 1) || (g.backend_access == 0)) %}disabled='disabled'{% endif %}>
+        </td>
+    {% endfor %}
+    </tr>
+    {% if (page.subpages|length > 0) %}
+        {% import _self as menu_ref %}
+        {% for subpage in page.subpages %}
+            {{ menu_ref.display_pageblock( subpage, allGroups, deep + 1 ) }}
+        {% endfor %}
+    {% endif %}
+{% endmacro %}
+
+{% import _self as menu_ref %}
+{% for page in pageTree %}
+    {{ menu_ref.display_pageblock( page, allGroups, 0 ) }}
+{% endfor %}
+
+    </tbody>
+    </table>
+    <div class="column spacer1"></div>
+    <div class="column">
+        <button class="floated positive ui button" type="submit" >{{ TEXT.SAVE }}</button>
+        <button class="floated ui button orange" type="reset" >{{ TEXT.RESET }}</button>
+    </div>	
+
+<form>
+
+</div>
+<script>
+
+function toggleColumn(num, selectRef) {
+    let check_boxes = $(".c"+num);
+    check_boxes.prop("checked", selectRef.checked);
+}
+
+</script>
+{% endautoescape %}
